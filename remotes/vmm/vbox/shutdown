@@ -1,0 +1,52 @@
+#!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
+# -------------------------------------------------------------------------- #
+# Copyright 2010-2011, Hector Sanjuan, David Rodríguez, Pablo Donaire        #
+#                                                                            #
+# Licensed under the Apache License, Version 2.0 (the "License"); you may    #
+# not use this file except in compliance with the License. You may obtain    #
+# a copy of the License at                                                   #
+#                                                                            #
+# http://www.apache.org/licenses/LICENSE-2.0                                 #
+#                                                                            #
+# Unless required by applicable law or agreed to in writing, software        #
+# distributed under the License is distributed on an "AS IS" BASIS,          #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   #
+# See the License for the specific language governing permissions and        #
+# limitations under the License.                                             #
+#--------------------------------------------------------------------------- #
+
+$: << File.dirname(__FILE__)
+
+require 'OneVBox'
+
+TIMEOUT=20
+POLL_INTERVAL=1
+
+vmid = ARGV[0]
+
+VM = OneVBox.new(vmid)
+
+rc = VM.power_off_acpi
+
+count=0
+
+until count==TIMEOUT
+  break if VM.powered_off?
+  count+=1
+  sleep POLL_INTERVAL
+end
+
+#if it did not work, we plug it off
+if count == 20 || rc
+  rc = VM.power_off
+  until VM.powered_off? do sleep POLL_INTERVAL end unless rc
+end
+
+# we remove all trace of machine
+rc = VM.storage_dettach unless rc
+rc = VM.close_mediums unless rc
+rc = VM.unregister unless rc
+
+exit(rc) if rc
+exit(0)

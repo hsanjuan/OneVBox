@@ -1,0 +1,96 @@
+# ----------------------------------------------------------------------
+# VM ATTRIBUTES FOR THE ONE-VBOX DRIVER
+# ----------------------------------------------------------------------
+
+#---------------------------------------
+# Name of the VM 
+#---------------------------------------
+
+NAME = "vm-example"	# Ignored: one-$VMID is used
+
+#---------------------------------------
+#               Capacity
+#---------------------------------------
+
+CPU    = "amount_of_requested_CPU" # Optional
+MEMORY = "amount_of_requested_MEM" # Optional
+VCPU   = "number of virtual cpus"  # Optional
+
+#---------------------------------------
+#      Features of the hypervisor
+#---------------------------------------
+
+FEATURES = [
+  pae  = "yes|no",   # Optional
+  acpi = "yes|no" ]  # Optional
+
+#---------------------------------------
+#                VM Disks
+#---------------------------------------
+
+DISK = [
+  image_id = "id_of_a_registered_image"              #Optional
+  bus      = "ide|scsi|sata|floppy|sas",             #Mandatory
+  target   = "device_to_map_disk",                   #Mandatory
+]
+--or--
+  type     = "disk|dvd|floppy",			     #Mandatory
+  source   = "path_to_disk_image_file", 	     #Mandatory
+  target   = "device_to_map_disk",                   #Mandatory
+  bus      = "ide|scsi|sata|floppy|sas",             #Mandatory
+  readonly = "yes|no",                               #Optional
+  clone    = "yes|no",                               #Optional
+  save     = "path_to_disk_image_file"               #Optional
+]  
+
+#---------------------------------------
+#           Network Interfaces
+#---------------------------------------
+#Several ones can be specified
+
+NIC = [
+  network_id = "id of the virtual network" ]  #Optional
+--or--
+  ip      = "ip_address",                    #Optional
+  bridge  = "name_of_bridge_to_bind_if",     #Mandatory
+  mac     = "HW_address" ]                   #Optional
+
+
+GRAPHICS = [				#Optional
+  type   = "vrdp|sdl",			#Mandatory              
+  listen = "IP-to-listen-on",		#Mandatory VRDP
+  port   = "port" ]                     #Optional VRDP. Default port used otherwise.
+
+#---------------------------------------
+#  Raw Hypervisor attributes 
+#---------------------------------------
+
+RAW = [			# Optional
+  type = "vbox", 	
+  data = "raw_domain_configutarion"] #Options passed to VBoxManage modifyvm"
+
+#---------------------------------------
+#  Context for the VM
+#    values can use:
+#    $<template_variable>
+#    $<template_variable>[<attribute>]
+#    $<template_variable>[<attribute>, <attribute2>=<value2>]
+#    $NETWORK[<vnet_attribute>, NAME=<vnet_name>]
+#---------------------------------------
+
+CONTEXT = [ # Optional
+  var_1 = "value_1",
+  var_n = "value_n",
+  files = "space-separated list of paths to include in context device",
+  target= "device to attach the context device" ]
+
+#---------------------------------------
+#  Scheduler
+#    Requirements expressions can use:
+#    $<template_variable>
+#    $<template_variable>[<attribute>]
+#    $<template_variable>[<attribute>, <attribute2>=<value2>]
+#---------------------------------------
+
+REQUIREMENTS = "Bool_expression_for_reqs"       #Optional
+RANK         = "Arith_expression_to_rank_hosts" #Optional

@@ -1,0 +1,80 @@
+#!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
+# -------------------------------------------------------------------------- #
+# Copyright 2010-2011, Hector Sanjuan, David Rodríguez, Pablo Donaire        #
+#                                                                            #
+# Licensed under the Apache License, Version 2.0 (the "License"); you may    #
+# not use this file except in compliance with the License. You may obtain    #
+# a copy of the License at                                                   #
+#                                                                            #
+# http://www.apache.org/licenses/LICENSE-2.0                                 #
+#                                                                            #
+# Unless required by applicable law or agreed to in writing, software        #
+# distributed under the License is distributed on an "AS IS" BASIS,          #
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.   #
+# See the License for the specific language governing permissions and        #
+# limitations under the License.                                             #
+#--------------------------------------------------------------------------- #
+
+$: << File.dirname(__FILE__)
+
+require 'OneVBox'
+
+# ** PRE-DEPLOY **
+
+#Setting a folder to keep the domain
+domain_filename=ARGV[0]
+`mkdir -p $(dirname #{domain_filename})`
+#Saving the domain file
+begin
+    f = File.new(domain_filename, "w")
+    f.write($stdin.read)
+    f.close
+rescue e
+    OpenNebula.log_error("Error saving deployment file: #{e.message}")
+end
+
+
+#opening the domain file
+VM = OneVBox.new(nil,domain_filename)
+
+#STEPS OF DEPLOY
+# 1.Create machine
+# 2.Modify machine with deployment params
+# 3.Clone disk
+# 4.Add controllers
+# 5.Attach controllers-mediums
+# 6.Start VM
+
+rc = VM.create
+rc = VM.modify unless rc
+if rc
+    VM.unregister
+else
+    rc = VM.clone_disks
+    if rc # fail
+        VM.close_mediums
+        VM.unregister
+    else
+        rc = VM.add_controllers
+        if rc #fail
+            VM.close_mediums
+            VM.unregister
+        else
+            rc = VM.storage_attach
+            if rc #fail
+                VM.storage_dettach
+                VM.close_mediums
+                VM.unregister
+            else
+                #sometimes machine is not ready to start
+                sleep 2
+                rc = VM.start
+            end
+        end
+    end
+end
+
+puts "#{VM.vmname}:#{VM.deployment_file}"
+exit(rc) if rc
+exit(0)
