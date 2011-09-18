@@ -84,6 +84,6 @@ The one-vbox driver package contains the following files. Note that they are ref
 Authors
 -------
 
-This driver is forked from the one-vbox original proyect (http://code.google.com/p/one-vbox), written by Hector Sanjuan, David Rodríguez and Pablo Donaire.
+This driver is forked from the one-vbox original project (http://code.google.com/p/one-vbox), written by Hector Sanjuan, David Rodríguez and Pablo Donaire as CS degree's final project.
 
 It is maintained by Hector Sanjuan (hsanjuan@opennebula.org).
