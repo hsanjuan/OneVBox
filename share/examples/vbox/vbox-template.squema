@@ -6,7 +6,7 @@
 # Name of the VM 
 #---------------------------------------
 
-NAME = "vm-example"	# Ignored: one-$VMID is used
+NAME = "vm-example"
 
 #---------------------------------------
 #               Capacity
