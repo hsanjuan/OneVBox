@@ -164,7 +164,7 @@ class OneVBox
         info.split(/\n/).each do | line |
             if line.match('^VMState=')
                 state = line.split("=")[1].strip
-                if state.include?("running") || state.include("poweroff")
+                if state.include?("running") || state.include?("poweroff")
                     puts "STATE=a"
                 elsif state.include?("paused")
                     puts "STATE=p"
