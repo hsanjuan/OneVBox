@@ -105,7 +105,7 @@ module OneVBoxXMLParser
             end
         end
 
-        "#{@vmname} #{modify_args}" if modify_args.size > 0
+        return "#{@vmname} #{modify_args}" if modify_args.size > 0
         nil
     end
 
