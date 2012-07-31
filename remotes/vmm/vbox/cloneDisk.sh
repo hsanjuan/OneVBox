@@ -16,10 +16,14 @@
 #--------------------------------------------------------------------------- #
 
 disk=$1
-
-#used for not having two disks with the same UUID
-mv "$disk" "$disk.temp" && VBoxManage clonehd "$disk.temp" "$disk"
-rc=$?
+rc=0
 chmod u+rw "$disk"
-rm "$disk.temp"
+
+# Test valid data file is being cloned
+if [ "`file -b \"$disk\"`" = "data" ]
+then 
+    # Ensure two disks will not have identical UUID
+    VBoxManage internalcommands sethduuid "$disk"
+    rc=$?
+fi
 exit $rc
