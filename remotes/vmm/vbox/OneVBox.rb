@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------- #
-# Copyright 2010-2011, Hector Sanjuan, David Rodríguez, Pablo Donaire        #
+# Copyright 2010-2013, Hector Sanjuan, David Rodríguez, Pablo Donaire        #
 #                                                                            #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may    #
 # not use this file except in compliance with the License. You may obtain    #
@@ -90,11 +90,11 @@ class OneVBox
 
 
 
-    #Cloning disks
-    def clone_disks
+    #Make sure disks have unique uuids
+    def set_unique_uuids
         rc=nil
-        disk_locations.each do | disk_location |
-            rc = OpenNebula.exec_and_log("#{File.dirname(__FILE__)}/cloneDisk.sh #{disk_location}")
+        disk_locations().each do | disk_location |
+            rc = OpenNebula.exec_and_log("#{VBOX_SETHDUUID} #{disk_location}")
             break if rc
         end
         rc
@@ -117,7 +117,7 @@ class OneVBox
     # Attaches storage controllers in VM with deployment params
     def add_controllers
         rc=nil
-        controllers = controllers_to_add
+        controllers = controllers_to_add()
         return 1 unless controllers
 
         controllers.each do | controller |
@@ -131,7 +131,7 @@ class OneVBox
     # Atttach storage mediums in VM with deployment params
     def storage_attach
         rc=nil
-        storageattach_args.each do | sa_args |
+        storageattach_args().each do | sa_args |
             rc = OpenNebula.exec_and_log("#{VBOX_STORAGEATTACH} #{sa_args}")
             break if rc
         end
@@ -141,7 +141,7 @@ class OneVBox
     # Dettach storage devices with deployment params
     def storage_dettach
         rc=nil
-        storagedettach_args.each do | sd_args |
+        storagedettach_args().each do | sd_args |
             rc = OpenNebula.exec_and_log("#{VBOX_STORAGEATTACH} #{sd_args}")
             break if rc
         end
@@ -150,7 +150,7 @@ class OneVBox
 
     # Start a virtual machine with deployment params
     def start
-        s_args = start_args
+        s_args = start_args()
         OpenNebula.exec_and_log("#{VBOX_STARTVM} #{@vmname} #{s_args}")
     end
 
@@ -211,6 +211,12 @@ class OneVBox
     def powered_off?
         OpenNebula.log(%&Running #{VBOX_SHOWVMINFO} #{@vmname} | grep State | grep "powered off"&)
         `#{VBOX_SHOWVMINFO} #{@vmname} | grep State | grep "powered off"`
+        $?.exitstatus == 0
+    end
+
+    def saved?
+        OpenNebula.log(%&Running #{VBOX_SHOWVMINFO} #{@vmname} | grep State | grep "saved"&)
+        `#{VBOX_SHOWVMINFO} #{@vmname} | grep State | grep "saved"`
         $?.exitstatus == 0
     end
 

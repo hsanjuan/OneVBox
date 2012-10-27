@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------- #
-# Copyright 2010-2011, Hector Sanjuan, David Rodríguez, Pablo Donaire        #
+# Copyright 2010-2013, Hector Sanjuan, David Rodríguez, Pablo Donaire        #
 #                                                                            #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may    #
 # not use this file except in compliance with the License. You may obtain    #
@@ -38,16 +38,16 @@ module OneVBoxXMLParser
         modify_args = "";
 
         memory = @xml_root.elements["MEMORY"]#amount of RAM in MB"
-        modify_args += "--memory #{memory.text} " if memory
+        modify_args << "--memory #{memory.text} " if memory
 
         vcpu = @xml_root.elements["VCPU"] #number of virtual cpus
-        modify_args += "--cpus #{vcpu.text} " if vcpu
+        modify_args << "--cpus #{vcpu.text} " if vcpu
 
         pae = @xml_root.elements["FEATURES/PAE"] #Physical adress extension
-        modify_args += (pae.text == "yes"? "--pae on ":"--pae off ") if pae
+        modify_args << (pae.text == "yes"? "--pae on ":"--pae off ") if pae
 
         acpi = @xml_root.elements["FEATURES/ACPI"] #Advanced configuration and power interface"
-        modify_args += (acpi.text == "yes"? "--acpi on ":"--acpi off ") if acpi
+        modify_args << (acpi.text == "yes"? "--acpi on ":"--acpi off ") if acpi
 
 
         #NIC
@@ -61,13 +61,14 @@ module OneVBoxXMLParser
             bridge = nic.elements["BRIDGE"]
 
             if bridge
-                modify_args += "--nic#{niface} bridged "
-                modify_args += "--bridgeadapter#{niface} #{bridge.text} "
-                mac = nic.elements["MAC"] #normally random address given by VirtualBox
-                modify_args += "--macaddress#{niface} #{(mac.text).delete(":")} " if mac
+                modify_args << "--nic#{niface} bridged "
+                modify_args << "--bridgeadapter#{niface} #{bridge.text} "
+                #normally random address given by VirtualBox
+                mac = nic.elements["MAC"]
+                modify_args << "--macaddress#{niface} #{(mac.text).delete(":")} " if mac
                 niface += 1
             else
-                modify_args += "--nic#{niface} nat "
+                modify_args << "--nic#{niface} nat "
             end
 
         end
@@ -79,17 +80,18 @@ module OneVBoxXMLParser
         #until it finds a "vrdp" one. Then adds the
         #correct arguments and breaks out of loop.
         @xml_root.each_element('GRAPHICS') do | graphics |
-            if graphics.elements["TYPE"] and graphics.elements["TYPE"].text == "vrdp"
-                modify_args += "--vrdp on "
+            type = graphics.elements["TYPE"]
+            if type
+                listen = graphics.elements["LISTEN"]#IP to listen
+                port = graphics.elements["PORT"]
 
-                vrdp_addr = graphics.elements["LISTEN"]#IP where the VRDP server will bind to
-                modify_args += "--vrdpaddress #{vrdp_addr.text} " if vrdp_addr
+                case type.text.downcase
+                when "vrdp"
+                    modify_args << "--vrdp on "
+                    modify_args << "--vrdpaddress #{listen.text} " if listen
+                    modify_args << (port ? "--vrdpport #{port.text} " : "-- vrdpport default ")
 
-                vrdp_port = graphics.elements["PORT"]# 0 means 3389, standard port for RDP
-                modify_args += (vrdp_port != nil ? "--vrdpport #{vrdp_port.text} " : "-- vrdpport default ")
-
-                break
-
+                end
             end
         end
 
@@ -101,7 +103,7 @@ module OneVBoxXMLParser
         @xml_root.each_element('RAW') do | raw |
             if raw.elements["TYPE"] and raw.elements["TYPE"].text == "vbox"
                 data = raw.elements["DATA"]
-                modify_args += data.text if data
+                modify_args << data.text if data
             end
         end
 
@@ -114,7 +116,7 @@ module OneVBoxXMLParser
         @xml_root.each_element('GRAPHICS') do | graphics |
             if graphics.elements["TYPE"]
                 type = graphics.elements["TYPE"].text
-                case type
+                case type.downcase
                 when "sdl" then return "--type sdl"
                 else return "--type headless"
                 end
@@ -125,6 +127,15 @@ module OneVBoxXMLParser
 
 
 
+    def type_to_medium(type)
+        case type.downcase
+        when "file" then return "disk"
+        when "block" then return "disk"
+        when "cdrom" then return "dvd"
+        else return "disk"
+        end
+    end
+
     #Return an array of strings to close the mediums, arguments of VBoxManage closemedium
     def closemedium_args
         disk_number = 0
@@ -134,15 +145,15 @@ module OneVBoxXMLParser
         @xml_root.each_element('DISK') do | disk |
             closemedium_args=""
 
-            type = disk.elements["TYPE"] #medium type: "disk|dvd|floppy"
+            type = disk.elements["TYPE"]
             if type
-                closemedium_args += "#{type.text.downcase} "
+                closemedium_args << "#{type_to_medium(type.text)} "
             else
                 OpenNebula.log_error("Error: disk #{disk_number} type not specified")
                 return nil
             end
 
-            closemedium_args += "#{basedir}/disk.#{disk_number} "
+            closemedium_args << "#{basedir}/disk.#{disk_number} "
 
             closemedium_args_array << closemedium_args
 
@@ -152,12 +163,23 @@ module OneVBoxXMLParser
 
     end
 
+    # Translate the disk target into a valid VBox controller
+    def target_to_controller(target)
+        disk_type = target[0..1]
+        case disk_type
+        when "hd" then "ide"
+        when "sd" then "sata"
+        when "fd" then "floppy"
+        else "ide"
+        end
+    end
+
     # Returns an array with the controllers that need to be added.
     def controllers_to_add
         toadd = []
         @xml_root.each_element('DISK') do |disk|
-            bus = disk.elements["BUS"]
-            toadd << bus.text if bus
+            target = disk.elements["TARGET"]
+            toadd << target_to_controller(target.text) if target
         end #each disk
 
         #do not return duplicate controller names
@@ -179,12 +201,11 @@ module OneVBoxXMLParser
     # ===Parameters:
     # * _type_: Disk type in ONE format
     def convert_type type
-        type = type.downcase
-        case type
-        when "disk" then return "hdd"
-        when "dvd" then return "dvddrive"
-        when "floppy" then return "fdd"
-        else return nil
+        case type.downcase
+        when "file" then return "hdd"
+        when "block" then return "hdd"
+        when "cdrom" then return "dvddrive"
+        else return "hdd"
         end
     end
 
@@ -207,25 +228,25 @@ module OneVBoxXMLParser
         storageattach_args_array = []
         @xml_root.each_element('DISK') do |disk|
 
-            bus = disk.elements["BUS"]
             target = disk.elements["TARGET"]
             type = disk.elements["TYPE"]
-            storageattach_args = @vmname
+            storageattach_args = "#{@vmname}"
 
             #if these are not defined we cannot call +storageattach+
-            if bus and target and type
-                storageattach_args += " --storagectl ONE-#{bus.text} "
-                storageattach_args += "--port #{port_number target.text} "
-                storageattach_args += "--device 0 "
-                storageattach_args += "--type #{convert_type type.text} "
-                storageattach_args += "--medium #{basedir}/disk.#{disk_number} "
+            if target and type
+                controller = target_to_controller(target.text)
+                storageattach_args << " --storagectl ONE-#{controller} "
+                storageattach_args << "--port #{port_number target.text} "
+                storageattach_args << "--device 0 "
+                storageattach_args << "--type #{convert_type type.text} "
+                storageattach_args << "--medium #{basedir}/disk.#{disk_number} "
                 readonly = disk.elements["READONLY"]
-                storageattach_args += (readonly.text == "yes"? "--mtype immutable " : "--mtype normal ") if readonly
+                storageattach_args << (readonly.text == "yes"? "--mtype immutable " : "--mtype normal ") if readonly
 
                 storageattach_args_array << storageattach_args
 
             else
-                OpenNebula.log_error("Error attaching storage: bus, target or type not specified in disk #{disk_number}")
+                OpenNebula.log_error("Error attaching storage: target or type not specified in disk #{disk_number}")
                 return nil
             end #if
 
@@ -243,23 +264,23 @@ module OneVBoxXMLParser
         storagedettach_args_array = []
         @xml_root.each_element('DISK') do |disk|
 
-            bus = disk.elements["BUS"]
             target = disk.elements["TARGET"]
             type = disk.elements["TYPE"]
-            storagedettach_args = @vmname
+            storagedettach_args = "#{@vmname}"
 
             #if these are not defined we cannot call +storageattach+
-            if bus and target
-                storagedettach_args += " --storagectl ONE-#{bus.text} "
-                storagedettach_args += "--port #{port_number target.text} "
-                storagedettach_args += "--device 0 "
-                storagedettach_args += "--medium none"
+            if target
+                controller = target_to_controller(target.text)
+                storagedettach_args << " --storagectl ONE-#{controller} "
+                storagedettach_args << "--port #{port_number target.text} "
+                storagedettach_args << "--device 0 "
+                storagedettach_args << "--medium none"
 
                 storagedettach_args_array << storagedettach_args
 
             else
 
-                OpenNebula.log_error("Error dettaching storage: bus or target not specified in disk #{disk_number}")
+                OpenNebula.log_error("Error dettaching storage: target not specified in disk #{disk_number}")
                 return nil
 
             end #if

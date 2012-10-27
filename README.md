@@ -14,7 +14,7 @@ Currently, the only common OpenNebula operation which is not supported is Live M
 Requirements
 ------------
 
- * **OpenNebula 3.0** : Working installation of OpenNebula 3.0 version and, if used, the Sunstone GUI.
+ * **OpenNebula 3.8** : Working installation of OpenNebula 3.8 version and, if used, the Sunstone GUI.
  * **VirtualBox 4.x** : The cluster nodes must have a working installation of VirtualBox (currently VirtualBox 4.0 is supported). VirtualBox must be usable by the OpenNebula user (tipically oneadmin), that means this user should pertain to the virtualbox group and the permissions on the VirtualBox executables should be set properly.
  * **Ruby (1.8.7 or 1.9.2)** must be installed in the remote node.
  * **GNU tar** is needed in the remote node to save and migrate Virtual Machines.
@@ -47,7 +47,7 @@ In order to enable the one-vbox driver, it is necessary to modify `oned.conf` ac
 
 The name of the driver needs to be provided at the time of adding a new host to OpenNebula. For example:
 
-    frontend@opennebula $ onehost create <hostname> im_vbox vmm_vbox tm_ssh
+    frontend@opennebula $ onehost create <hostname> -i im_vbox -v vmm_vbox -n vn_dummy
 
 You can find an example oned.conf file in the `share/examples/vbox` folder.
 
@@ -86,4 +86,4 @@ Authors
 
 This driver is forked from the one-vbox original project (http://code.google.com/p/one-vbox), written by Hector Sanjuan, David Rodríguez and Pablo Donaire as CS degree's final project.
 
-It is maintained by Hector Sanjuan (hsanjuan@opennebula.org).
+It is maintained by Hector Sanjuan (hector@convivencial.org).

@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------- #
-# Copyright 2010-2011, Hector Sanjuan, David Rodríguez, Pablo Donaire        #
+# Copyright 2010-2013, Hector Sanjuan, David Rodríguez, Pablo Donaire        #
 #                                                                            #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may    #
 # not use this file except in compliance with the License. You may obtain    #
@@ -51,7 +51,7 @@ rc = VM.modify unless rc
 if rc
     VM.unregister
 else
-    rc = VM.clone_disks
+    rc = VM.set_unique_uuids
     if rc # fail
         VM.close_mediums
         VM.unregister
@@ -70,6 +70,11 @@ else
                 #sometimes machine is not ready to start
                 sleep 2
                 rc = VM.start
+                if rc
+                    VM.storage_dettach
+                    VM.close_mediums
+                    VM.unregister
+                end
             end
         end
     end

@@ -1,6 +1,6 @@
 #! /bin/bash
 # -------------------------------------------------------------------------- #
-# Copyright 2010-2011, Hector Sanjuan, David Rodríguez, Pablo Donaire        #
+# Copyright 2010-2013, Hector Sanjuan, David Rodríguez, Pablo Donaire        #
 #                                                                            #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may    #
 # not use this file except in compliance with the License. You may obtain    #
@@ -44,7 +44,7 @@ cp -v remotes/vmm/vbox/* $ONE_VMM_DIR_VBOX
 [[ -d $ONE_IM_DIR_VBOX ]] || mkdir -p $ONE_IM_DIR_VBOX
 cp -v remotes/im/vbox.d/* $ONE_IM_DIR_VBOX
 
-# prepare im_vbox dir in etc/ although it is empty
+# prepare im_vbox config folder
 [[ -d $ONE_ETC_DIR_IM_VBOX ]] || mkdir -p $ONE_ETC_DIR_IM_VBOX
 
 # copy vmm_exec_vbox.conf file with default attributes vbox driver

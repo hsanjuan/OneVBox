@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------- #
-# Copyright 2002-2011, OpenNebula Project Leads (OpenNebula.org)             #
-# Copyright 2010-2011, Hector Sanjuan, David Rodríguez, Pablo Donaire        #
+# Copyright 2002-2013, OpenNebula Project Leads (OpenNebula.org)             #
+# Copyright 2010-2013, Hector Sanjuan, David Rodríguez, Pablo Donaire        #
 #                                                                            #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may    #
 # not use this file except in compliance with the License. You may obtain    #

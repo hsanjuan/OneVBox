@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # -*- coding: utf-8 -*-
 # -------------------------------------------------------------------------- #
-# Copyright 2010-2011, Hector Sanjuan, David Rodríguez, Pablo Donaire        #
+# Copyright 2010-2013, Hector Sanjuan, David Rodríguez, Pablo Donaire        #
 #                                                                            #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may    #
 # not use this file except in compliance with the License. You may obtain    #
@@ -20,6 +20,7 @@ $: << File.dirname(__FILE__)
 
 require 'OneVBox'
 
+POLL_INTERVAL = 1
 
 # steps
 # 2- take snapshot (with pause)
@@ -33,6 +34,8 @@ checkpoint = ARGV[1]
 VM = OneVBox.new(vmid)
 
 rc = VM.save_state
+sleep 2
+until VM.saved? do sleep POLL_INTERVAL end unless rc
 exit(rc) if rc
 
 #if save_state fails (i.e. VM not running), the VM will not be cancelled.

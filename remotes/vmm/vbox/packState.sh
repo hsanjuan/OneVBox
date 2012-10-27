@@ -1,6 +1,6 @@
 #!/bin/bash
 # -------------------------------------------------------------------------- #
-# Copyright 2010-2011, Hector Sanjuan, David Rodríguez, Pablo Donaire        #
+# Copyright 2010-2013, Hector Sanjuan, David Rodríguez, Pablo Donaire        #
 #                                                                            #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may    #
 # not use this file except in compliance with the License. You may obtain    #
@@ -20,9 +20,13 @@ vmname=$2
 uuid=$3
 checkpoint=$4
 dir=$(dirname "$domain")
+
+snapshots_folder="$HOME/VirtualBox VMs/$vmname/Snapshots"
+last_checkpoint=$(ls -t "$snapshots_folder" | head -1)
+
 saved_domain="$dir/saved_domain.txt"
 echo $(basename "$domain") > "$saved_domain"
-cp "$HOME/VirtualBox VMs/$vmname/Snapshots/{$uuid}.sav" "$dir/checkpoint.sav"
+cp "$snapshots_folder/$last_checkpoint" "$dir/checkpoint.sav"
 tar -C $dir -zcf "$checkpoint" "$(basename $domain)" "$(basename $saved_domain)" "checkpoint.sav"
 # [[ $? -ne 0 ]] && exit 1
 rm "$dir/checkpoint.sav" "$saved_domain"
