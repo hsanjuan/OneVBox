@@ -1,5 +1,5 @@
 /* -------------------------------------------------------------------------- */
-/* Copyright 2010-2011: Hector Sanjuan, David Rodríguez, Pablo Donaire        */
+/* Copyright 2010-2013: Hector Sanjuan, David Rodríguez, Pablo Donaire        */
 /*                                                                            */
 /* Licensed under the Apache License, Version 2.0 (the "License"); you may    */
 /* not use this file except in compliance with the License. You may obtain    */
@@ -72,17 +72,6 @@ var vbox_create_vm_tmpl =
                         <select type="text" id="IMAGE_ID" name="image_id">\
                         </select>\
                         <div class="tip">Name of the image to use</div>\
-                    </div>\
-                    <div class="vm_param">\
-                        <label for="BUS">Bus:</label>\
-                        <select id="BUS" name="bus">\
-                            <option value="ide">IDE</option>\
-                            <option value="sata">SATA</option>\
-                            <option value="scsi">SCSI</option>\
-                            <option value="floppy">Floppy</option>\
-                            <option value="sas">SAS</option>\
-                        </select>\
-                        <div class="tip">Type of disk device to emulate: ide, scsi</div>\
                     </div>\
                     <div class="vm_param vbox">\
                         <label for="TARGET">Target:</label>\
@@ -441,16 +430,14 @@ function setupCreateVBoxVMDialog(){
         $('#add_disk_button',section_disks).click(function(){
 
             var image_id = $('#IMAGE_ID',section_disks).val();
-            var bus = $('#BUS',section_disks).val();
             var target = $('#TARGET',section_disks).val();
 
-            if (!image_id.length || !bus.length || !target.length){
+            if (!image_id.length || !target.length){
                 notifyError("There are mandatory fields missing in the disks section");
                 return false;
             }
 
             var value = {   "IMAGE_ID"   : image_id,
-                            "BUS"        : bus,
                             "TARGET"     : target }
 
             var value_string = JSON.stringify(value);
