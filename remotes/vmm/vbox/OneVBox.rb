@@ -214,6 +214,26 @@ class OneVBox
         $?.exitstatus == 0
     end
 
+    # Resets the machine
+    def reset
+        OpenNebula.exec_and_log("#{VBOX_CONTROLVM} #{@vmname} reset")
+    end
+
+    def reboot
+        OpenNebula.log_error("Reboot operation not supported")
+        nil
+    end
+
+    def attach_disk
+        OpenNebula.log_error("Attach disk operation not supported")
+        nil
+    end
+
+    def detach_disk
+        OpenNebula.log_error("Detach disk operation not supported")
+        nil
+    end
+
     def saved?
         OpenNebula.log(%&Running #{VBOX_SHOWVMINFO} #{@vmname} | grep State | grep "saved"&)
         `#{VBOX_SHOWVMINFO} #{@vmname} | grep State | grep "saved"`
