@@ -15,7 +15,7 @@ Requirements
 ------------
 
  * **OpenNebula 3.8** : Working installation of OpenNebula 3.8 version and, if used, the Sunstone GUI.
- * **VirtualBox 4.x** : The cluster nodes must have a working installation of VirtualBox (currently VirtualBox 4.0 is supported). VirtualBox must be usable by the OpenNebula user (tipically oneadmin), that means this user should pertain to the virtualbox group and the permissions on the VirtualBox executables should be set properly.
+ * **VirtualBox 4.1** : The cluster nodes must have a working installation of VirtualBox (currently VirtualBox 4.1 is supported). VirtualBox must be usable by the OpenNebula user (tipically oneadmin), that means this user should pertain to the virtualbox group and the permissions on the VirtualBox executables should be set properly.
  * **Ruby (1.8.7 or 1.9.2)** must be installed in the remote node.
  * **GNU tar** is needed in the remote node to save and migrate Virtual Machines.
 
