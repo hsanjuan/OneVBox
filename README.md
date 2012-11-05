@@ -8,8 +8,6 @@ The OpenNebula VirtualBox driver (OneVBox) allows the management of hosts and th
     
 OneVBox is formed by an IM_MAD -a serie of remote scripts that are able to monitor the remote hosts- and a VMM_MAD -remotes scripts to manage Virtual Machines-. This scripts typically communicate with by interpreting a XML description of the virtual machines and using the VBoxManage command-line interface to perform the required operations.
 
-Currently, the only common OpenNebula operation which is not supported is Live Migration, due to VirtualBox limitations.
-
 
 Requirements
 ------------
