@@ -147,25 +147,38 @@ module OneVBoxXMLParser
         basedir = `dirname #{@deployment_file}`.chomp
         closemedium_args_array = []
 
-        @xml_root.each_element('DISK') do | disk |
+        @xml_root.each_element('DISK|CONTEXT') do | disk |
             closemedium_args=""
+            disk_id = disk.elements["DISK_ID"]
+            disk_id = disk_id && disk_id.text
 
-            type = disk.elements["TYPE"]
-            if type
-                closemedium_args << "#{type_to_medium(type.text)} "
+            # Context does not provide TYPE
+            # so we need to add it manually
+            if disk.xpath == "/TEMPLATE/CONTEXT"
+                type = 'cdrom'
+                # VirtualBox is unable to determine image type
+                # Fortunately ONE provides an .iso symlink to the
+                # actual context disk. We add it as extension.
+                disk_id << ".iso"
             else
-                OpenNebula.log_error("Error: disk #{disk_number} type not specified")
-                return nil
+                type = disk.elements["TYPE"]
+                type = type && type.text
             end
 
-            closemedium_args << "#{basedir}/disk.#{disk_number} "
+            if type && disk_id
+                closemedium_args << "#{type_to_medium(type)} "
+                closemedium_args << "#{basedir}/disk.#{disk_id} "
+            else
+                OpenNebula.log_error("Error: disk ##{disk_number} type or disk_id not specified")
+                return nil
+            end
 
             closemedium_args_array << closemedium_args
 
             disk_number += 1
         end
-        return closemedium_args_array
 
+        return closemedium_args_array
     end
 
     # Translate the disk target into a valid VBox controller
@@ -182,14 +195,13 @@ module OneVBoxXMLParser
     # Returns an array with the controllers that need to be added.
     def controllers_to_add
         toadd = []
-        @xml_root.each_element('DISK') do |disk|
+        @xml_root.each_element('DISK|CONTEXT') do |disk|
             target = disk.elements["TARGET"]
             toadd << target_to_controller(target.text) if target
         end #each disk
 
         #do not return duplicate controller names
         return toadd.uniq
-
     end
 
 
@@ -198,6 +210,8 @@ module OneVBoxXMLParser
     # def device_number target
     #   return target[2] - 97
     # end
+
+    # sda -> 0, sdb -> 1, hda -> 0 etc...
     def port_number target
         return target[2].ord - 97
     end
@@ -214,14 +228,15 @@ module OneVBoxXMLParser
         end
     end
 
-
+    # Returns an array of paths to existing disks
+    # It is use to set_unique_uuids. This is not supported
+    # by context iso-format disk, so we leave it out
     def disk_locations
-        disk_number = 0
         basedir = `dirname #{@deployment_file}`.chomp
         disk_locations_array = []
         @xml_root.each_element('DISK') do |disk|
-            disk_locations_array << "#{basedir}/disk.#{disk_number}"
-            disk_number += 1
+            disk_id = disk.elements["DISK_ID"].text
+            disk_locations_array << "#{basedir}/disk.#{disk_id}"
         end
         return disk_locations_array
     end
@@ -231,27 +246,42 @@ module OneVBoxXMLParser
         disk_number = 0
         basedir = `dirname #{@deployment_file}`.chomp
         storageattach_args_array = []
-        @xml_root.each_element('DISK') do |disk|
+        @xml_root.each_element('DISK|CONTEXT') do |disk|
 
             target = disk.elements["TARGET"]
-            type = disk.elements["TYPE"]
+            disk_id = disk.elements["DISK_ID"]
+            disk_id = disk_id && disk_id.text
+
+            # Context does not provide TYPE
+            # so we need to set it manually
+            if disk.xpath == "/TEMPLATE/CONTEXT"
+                type = 'cdrom'
+                # VirtualBox is unable to determine image type
+                # Fortunately ONE provides an .iso symlink to the
+                # actual context disk. We add it as extension.
+                disk_id << ".iso"
+            else
+                type =  disk.elements["TYPE"]
+                type = type && type.text
+            end
+
             storageattach_args = "#{@vmname}"
 
             #if these are not defined we cannot call +storageattach+
-            if target and type
+            if target && type && disk_id
                 controller = target_to_controller(target.text)
                 storageattach_args << " --storagectl ONE-#{controller} "
-                storageattach_args << "--port #{port_number target.text} "
+                storageattach_args << "--port #{port_number(target.text)} "
                 storageattach_args << "--device 0 "
-                storageattach_args << "--type #{convert_type type.text} "
-                storageattach_args << "--medium #{basedir}/disk.#{disk_number} "
+                storageattach_args << "--type #{convert_type(type)} "
+                storageattach_args << "--medium #{basedir}/disk.#{disk_id} "
                 readonly = disk.elements["READONLY"]
                 storageattach_args << (readonly.text == "yes"? "--mtype immutable " : "--mtype normal ") if readonly
 
                 storageattach_args_array << storageattach_args
 
             else
-                OpenNebula.log_error("Error attaching storage: target or type not specified in disk #{disk_number}")
+                OpenNebula.log_error("Error attaching storage: target or type not specified in disk ##{disk_number}")
                 return nil
             end #if
 
@@ -267,17 +297,16 @@ module OneVBoxXMLParser
     def storagedettach_args
         disk_number = 0
         storagedettach_args_array = []
-        @xml_root.each_element('DISK') do |disk|
+        @xml_root.each_element('DISK|CONTEXT') do |disk|
 
             target = disk.elements["TARGET"]
-            type = disk.elements["TYPE"]
             storagedettach_args = "#{@vmname}"
 
             #if these are not defined we cannot call +storageattach+
             if target
                 controller = target_to_controller(target.text)
                 storagedettach_args << " --storagectl ONE-#{controller} "
-                storagedettach_args << "--port #{port_number target.text} "
+                storagedettach_args << "--port #{port_number(target.text)} "
                 storagedettach_args << "--device 0 "
                 storagedettach_args << "--medium none"
 
