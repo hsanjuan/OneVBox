@@ -51,7 +51,7 @@ rc = VM.modify unless rc
 if rc
     VM.unregister
 else
-    rc = VM.set_unique_uuids
+    rc = VM.setup_vbox_disks_formats
     if rc # fail
         VM.close_mediums
         VM.unregister

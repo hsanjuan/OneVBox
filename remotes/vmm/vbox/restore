@@ -44,7 +44,7 @@ VM = OneVBox.new(nil,domain_filename)
 rc = VM.create
 rc = VM.modify unless rc
 # rc = open_mediums if rc == 0 #deprecated Vbox 4.0
-rc = VM.set_unique_uuids unless rc
+rc = VM.setup_vbox_disks_formats unless rc
 rc = VM.add_controllers unless rc
 rc = VM.storage_attach unless rc
 rc = VM.adopt_state("#{dir}/checkpoint.sav") unless rc

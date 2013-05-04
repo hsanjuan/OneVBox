@@ -90,14 +90,40 @@ class OneVBox
 
 
 
-    #Make sure disks have unique uuids
-    def set_unique_uuids
-        rc=nil
-        disk_locations().each do | disk_location |
-            rc = OpenNebula.exec_and_log("#{VBOX_SETHDUUID} #{disk_location}")
-            break if rc
+    # Make sure disks have unique uuids
+    # Make sure they are in a format that can be
+    # attached to VirtualBox
+    def setup_vbox_disks_formats
+        require 'fileutils'
+
+        disks().each do |target, type, path, readonly|
+            # If it is a dvddrive vbox needs an ISO extension or it
+            # or it will freak out later
+            # lets create a symlink
+            # and count with it on attach/detach later
+            if type == "cdrom"
+                OpenNebula.log_info("Symlinking #{path}.iso")
+                FileUtils.ln_s(path, "#{path}.iso", :force => true)
+                next
+            end
+
+            # Try to set unique UUID
+            OpenNebula.log_info("Setting unique UUID to #{path}")
+            cmd = "#{VBOX_SETHDUUID} #{path}"
+            OpenNebula.log_info("Trying: #{cmd}")
+            `#{cmd}`
+            if $?.exitstatus != 0
+                OpenNebula.log_info("Failed to set UUID. Will try to convert it")
+                # Failed to set UUID. Assume it is a raw disk and import it
+                src = path
+                dst = "#{src}.vdi"
+                OpenNebula.exec_and_log("#{VBOX_CONVERTFROMRAW} #{src} #{dst}")
+                msg = "Replacing #{src} after converting from raw..."
+                OpenNebula.log_info(msg)
+                FileUtils.mv(dst, src)
+            end
         end
-        rc
+        nil
     end
 
 
