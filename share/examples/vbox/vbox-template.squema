@@ -48,9 +48,10 @@ NIC = [
 
 
 GRAPHICS = [				#Optional
-  type   = "vrdp|sdl",			#Mandatory              
-  listen = "IP-to-listen-on",		#Mandatory VRDP
-  port   = "port" ]                     #Optional VRDP. Default port used otherwise.
+  type   = "vrdp|sdl|vnc",		#Mandatory
+  listen = "IP-to-listen-on",		#Mandatory VRDP|VNC.
+  port   = "port",                      #Optional VRDP|VNC. Default port used otherwise.
+  passwd = "vnc_pass"                   #Optional VNC.
 
 #---------------------------------------
 #  Raw Hypervisor attributes

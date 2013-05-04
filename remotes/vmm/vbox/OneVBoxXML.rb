@@ -91,6 +91,10 @@ module OneVBoxXMLParser
                     modify_args << "--vrdpaddress #{listen.text} " if listen
                     modify_args << (port ? "--vrdpport #{port.text} " : "-- vrdpport default ")
 
+                when "vnc"
+                    modify_args << "--vnc on "
+                    #modify_args << "--vncaddress #{listen.text} " if listen
+                    modify_args << (port ? "--vncport #{port.text} " : "-- vncport default ")
                 end
             end
         end
@@ -118,6 +122,7 @@ module OneVBoxXMLParser
                 type = graphics.elements["TYPE"].text
                 case type.downcase
                 when "sdl" then return "--type sdl"
+                #when "vnc" then return "--type vnc"
                 else return "--type headless"
                 end
             end

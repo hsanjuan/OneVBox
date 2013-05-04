@@ -126,6 +126,7 @@ var vbox_create_vm_tmpl =
                             <option value="">Please select</option>\
                             <option value="sdl">SDL</option\>\
                             <option value="vrdp">VRDP</option>\
+                            <option value="vnc">VNC</option>\
                         </select>\
                         <div class="tip">Select graphics</div>\
                     </div>\
@@ -138,6 +139,11 @@ var vbox_create_vm_tmpl =
                         <label for="PORT">Port:</label>\
                         <input type="text" id="PORT" name="port" />\
                         <div class="tip">Port for the vrdp connection</div>\
+                    </div>\
+                    <div class="vm_param vbox">\
+                        <label for="PASSWD">Password:</label>\
+                        <input type="text" id="PASSWD" name="passwd" />\
+                        <div class="tip">Password for vnc connections</div>\
                     </div>\
                 </fieldset>\
             </div>\
@@ -507,10 +513,17 @@ function setupCreateVBoxVMDialog(){
                 case "vrdp":
                     $('#LISTEN',section_graphics).parent().show();
                     $('#PORT',section_graphics).parent().show();
+                    $('#PASSWD',section_graphics).parent().hide();
+                    break;
+                case "vnc":
+                    $('#LISTEN',section_graphics).parent().show();
+                    $('#PORT',section_graphics).parent().show();
+                    $('#PASSWD',section_graphics).parent().show();
                     break;
                 default:
                     $('#LISTEN',section_graphics).parent().hide();
                     $('#PORT',section_graphics).parent().hide();
+                    $('#PASSWD',section_graphics).parent().hide();
                     break;
             }
         });
@@ -630,29 +643,19 @@ function setupCreateVBoxVMDialog(){
         //process graphics -> fetch fields with value
         scope = section_graphics;
         var gr_type = $('select#TYPE',scope).val();
-        if (gr_type.length){
-            if (gr_type == "sdl") {
-                vm_json["GRAPHICS"] = {
-                    "TYPE" : "sdl"
-                    }
-            } else if (gr_type == "vrdp") {
-                var listen = $('#LISTEN',scope).val();
-                var port = $('#PORT',scope).val();
-                if (!listen.length) {
-
-                } else if (port.length) {
-                    vm_json["GRAPHICS"] = {
-                        "TYPE" : "vrdp",
-                        "LISTEN" : listen,
-                        "PORT" : port
-                    }
-                } else {
-                    vm_json["GRAPHICS"] = {
-                        "TYPE" : "vrdp",
-                        "LISTEN" : listen,
-                    }
-                }
+        if (gr_type){
+            vm_json["GRAPHICS"] = {
+                "TYPE" : gr_type
             }
+            var listen = $('#LISTEN',scope).val();
+            var port = $('#PORT',scope).val();
+            var password = $('#PASSWD', scope).val();
+            if (listen)
+                vm_json["GRAPHICS"]["LISTEN"] = listen
+            if (port)
+                vm_json["GRAPHICS"]["PORT"] = port
+            if (password && gr_type == "vnc")
+                vm_json["GRAPHICS"]["PASSWD"] = password
         }
 
         //context
